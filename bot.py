@@ -1,6 +1,7 @@
 import discord
 from discord.ext import commands
-import scrapers.calendar as calendar
+from scrapers.calendar import getNameFromID
+from banner import getProfFromID
 import json
 
 bot = commands.Bot(command_prefix='!')
@@ -14,9 +15,10 @@ async def ping(ctx):
     await ctx.send('pong')
 
 @bot.command(aliases=["course"])
-async def getCourseDetails(ctx, *, statement):
-    name = calendar.getNameFromID(statement)
-    await ctx.send(name)
+async def getCourseDetails(ctx, *, courseID):
+    name = getNameFromID(courseID)
+    prof = getProfFromID(courseID)
+    await ctx.send(name + "\nProf: " + prof)
 
 f = open("config.json")
 data = json.load(f)
