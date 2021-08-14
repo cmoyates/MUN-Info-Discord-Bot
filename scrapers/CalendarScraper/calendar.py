@@ -25,4 +25,4 @@ def getNameFromID(courseID):
     course = course_divs[courseIndex]
     courseName = course.find("p", {"class": "courseTitle"}).text.strip()
     courseDesc = course.div.p.text.strip()
-    return "**" + courseName + "**" + "\n" + courseName + " " + courseDesc
+    return "**COMP " + courseID + " " + courseName + "**" + "\n" + courseName + " " + courseDesc

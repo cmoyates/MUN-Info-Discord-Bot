@@ -38,11 +38,10 @@ def actually_fetch_banner(year, term, level):
     return soup
 
 def getCourseFromID(courseID):
-    #print("\n\n\n\n\n\n\n")
     output = []
     campuses = []
     currentDate = datetime.datetime.now()
-    isTerm2 = currentDate < datetime.datetime(currentDate.year, 4, 28)
+    isTerm2 = currentDate.month < 5
     year = (currentDate.year - 1) if (currentDate < datetime.datetime(currentDate.year, 4, 28)) else currentDate.year
     term = 2 if isTerm2 else 1
     searchHTML = actually_fetch_banner(year, term, 1)
@@ -53,21 +52,10 @@ def getCourseFromID(courseID):
     for i in range(len(coursesByCampus)):
         courses = coursesByCampus[i].split("\nCOMP")
         campuses.append(courses.pop(0).split("\n", 1)[0].strip())
-        #print("TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT")
-        #print(campuses[i])
-        #print("TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT")
         for j in range(len(courses)):
             if courses[j][1:5] == courseID:
                 output.append([("COMP" + courses[j]).split("\n"), campuses[i]])
-            #print("---- 0000 ---- 0000 ---- 0000 ---- 0000 ----")
-            #print(courses[j])
-        #print("---- 0000 ---- 0000 ---- 0000 ---- 0000 ----")
     return output
-
-
-#print(getProfFromID("3200"))
-#getAllCourses()
-
 
 
 def theRestOfTheAlgorithm(courseID):
@@ -93,5 +81,5 @@ def theRestOfTheAlgorithm(courseID):
                         results[campusName].append(profName)
     return campuses, results
 
-one, two = theRestOfTheAlgorithm("1001")
-print(one, two)
+#one, two = theRestOfTheAlgorithm("1001")
+#print(one, two)

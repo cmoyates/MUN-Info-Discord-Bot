@@ -1,8 +1,8 @@
 import discord
 from discord.ext import commands
-from scrapers.calendar import getNameFromID
-from banner import theRestOfTheAlgorithm
-from RMP.rateMyProf import getRatingFromProf
+from scrapers.CalendarScraper.calendar import getNameFromID
+from scrapers.BannerScraper.banner import theRestOfTheAlgorithm
+from scrapers.RMPScraper.rateMyProf import getRatingFromProf
 import json
 
 bot = commands.Bot(command_prefix='!')
@@ -24,7 +24,7 @@ async def getCourseDetails(ctx, *, courseID):
     msg = name + "\n"
     campuses, profData = theRestOfTheAlgorithm(courseID)
     if len(campuses) == 0:
-        await ctx.send(msg + "**Nobody** is teaching this course this semester")
+        await ctx.send(msg + "\n**Nobody** is teaching this course this semester")
         return
     #print(campuses)
     msg += "\nProfessor(s) teaching this course this semester:\n"
