@@ -20,7 +20,7 @@ def getNameFromID(courseID):
             break
     
     if courseIndex == -1:
-        return "Course does not exist"
+        return None
     
     course = course_divs[courseIndex]
     courseName = course.find("p", {"class": "courseTitle"}).text.strip()

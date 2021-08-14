@@ -1,6 +1,7 @@
 from asyncio.windows_events import NULL
 import requests
 from bs4 import BeautifulSoup
+import datetime
 
 headers = {
     "User-Agent": "github.com/cmoyates/MUN-Info-Discord-Bot",
@@ -40,7 +41,11 @@ def getCourseFromID(courseID):
     #print("\n\n\n\n\n\n\n")
     output = []
     campuses = []
-    searchHTML = actually_fetch_banner(2021, 1, 1)
+    currentDate = datetime.datetime.now()
+    isTerm2 = currentDate < datetime.datetime(currentDate.year, 4, 28)
+    year = (currentDate.year - 1) if (currentDate < datetime.datetime(currentDate.year, 4, 28)) else currentDate.year
+    term = 2 if isTerm2 else 1
+    searchHTML = actually_fetch_banner(year, term, 1)
     if not searchHTML:
         return "Something went wrong..."
     coursesByCampus = searchHTML.text.split("Campus: ")
@@ -63,42 +68,30 @@ def getCourseFromID(courseID):
 #print(getProfFromID("3200"))
 #getAllCourses()
 
-output = getCourseFromID("1001")
 
-results = []
-print("------------------------------")
-for i in range(len(output)):
-    print(output[i][1])
-    topIndecies = []
-    for j in range(len(output[i][0])):
-        if len(output[i][0][j]) == 0:
-            output[i][0] = output[i][0][0:j]
-            break
-        if output[i][0][j][38] != " ":
-            topIndecies.append(j)
-            print("------------------------------")
-        print(output[i][0][j])
-    print("------------------------------")
-    #print(topIndecies)
-    indexNum = len(topIndecies)
-    topIndecies.append(len(output[i][0]))
-    for j in range(indexNum):
-        results.append({})
-        results[len(results)-1]["Campus"] = output[i][1]
-        hasProfAssigned = False
-        for k in range(topIndecies[j], topIndecies[j+1]):
-            containsTimes = (output[i][0][k][67:71] + output[i][0][k][72:76]).isdigit()
-            containsProf = output[i][0][k][138:145] == "Primary"
-            #print(containsTimes or containsProf)
-            if containsProf:
-                results[len(results)-1]["Prof"] = output[i][0][k][148:].strip()
-                hasProfAssigned = True
-            if not (containsTimes or containsProf):
-                results[len(results)-1]["Notes"] = output[i][0][k].strip()
-        if not hasProfAssigned:
-            results[len(results)-1]["Prof"] = None
 
-print()
-#print(results)
-for i in range(len(results)):
-    print(results[i])
+def theRestOfTheAlgorithm(courseID):
+    output = getCourseFromID(courseID)
+    results = {}
+    campuses = []
+    for i in range(len(output)):
+        campusName = output[i][1]
+        campuses.append(campusName)
+        results[campusName] = []
+        for j in range(len(output[i][0])):
+            if len(output[i][0][j]) == 0:
+                output[i][0] = output[i][0][0:j]
+                break
+            if output[i][0][j][38] != " ":
+                profName = output[i][0][j][148:].strip()
+                if len(profName) != 0:
+                    isNew = True
+                    for k in range(len(results[campusName])):
+                        if results[campusName][k] == profName:
+                            isNew = False
+                    if isNew:
+                        results[campusName].append(profName)
+    return campuses, results
+
+one, two = theRestOfTheAlgorithm("1001")
+print(one, two)
