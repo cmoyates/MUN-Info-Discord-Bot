@@ -1,6 +1,6 @@
 import discord
 from discord.ext import commands
-import calendar
+import scrapers.calendar as calendar
 import json
 
 bot = commands.Bot(command_prefix='!')
