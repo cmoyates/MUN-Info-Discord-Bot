@@ -1,1 +1,1 @@
-"# MUN-Info-Discord-Bot" 
+# MUN Info Discord Bot
