@@ -1,62 +1,80 @@
 from bs4 import BeautifulSoup
 from urllib.request import urlopen as uReq
 
-urlParts = ["https://www.ratemyprofessors.com/search/teachers?query=", "&sid=U2Nob29sLTE0NDE="]
+# These are the parts that go into a RMP search for a MUN prof (minus the name)
+urlParts = [
+    "https://www.ratemyprofessors.com/search/teachers?query=",
+    "&sid=U2Nob29sLTE0NDE=",
+]
 
-def getRMPURL(separatedProfName, firstTry):
-    
+# Get the completed URL for the RMP search
+def getRMPURL(separatedProfName):
+
     finalUrl = urlParts[0]
 
-    loopStart = 0 if firstTry else 1
-    for i in range(loopStart, len(separatedProfName)):
+    # Append every word from the name to the URL with "%20" in between them
+    for i in range(len(separatedProfName)):
         finalUrl += separatedProfName[i]
-        if i != len(separatedProfName)-1:
+        if i != len(separatedProfName) - 1:
             finalUrl += "%20"
 
     finalUrl += urlParts[1]
     return finalUrl
 
+
+# Get the soup from a URL
 def getSoupFromURL(url):
     uClient = uReq(url)
     page_html = uClient.read()
     uClient.close()
     return BeautifulSoup(page_html, "html.parser")
 
-def getRatingFromProf(profName):
+
+def getRatingFromProfName(profName):
+    # Get the URL for the search
     profName = profName.lower()
     separatedName = profName.split(" ")
-    finalUrl = getRMPURL(separatedName, True)
-    print(finalUrl)
-
+    finalUrl = getRMPURL(separatedName)
+    # Soup
     soup = getSoupFromURL(finalUrl)
+    # Get all divs for profs
+    profs = soup.find_all(
+        "a", {"class": "TeacherCard__StyledTeacherCard-syjs0d-0 dLJIlx"}
+    )
 
-    profs = soup.find_all("a", {"class": "TeacherCard__StyledTeacherCard-syjs0d-0 dLJIlx"})
-
+    # If there are no prof divs found we try again, but leave out the first name
     if len(profs) == 0:
-        finalUrl = getRMPURL(separatedName, False)
-        print(finalUrl)
+        finalUrl = getRMPURL(separatedName[1:])
         soup = getSoupFromURL(finalUrl)
-        profs = soup.find_all("a", {"class": "TeacherCard__StyledTeacherCard-syjs0d-0 dLJIlx"})
+        profs = soup.find_all(
+            "a", {"class": "TeacherCard__StyledTeacherCard-syjs0d-0 dLJIlx"}
+        )
+        # Two fails means no profile
         if len(profs) == 0:
             return None
 
     probablyTheRightProf = None
+    # If more than one prof is found from the search find the first one in the CS department
     if len(profs) > 1:
         foundCSProf = False
         for i in range(len(profs)):
-            if profs[i].find("div", {"class": "CardSchool__Department-sc-19lmz2k-0 haUIRO"}).text == "Computer Science":
+            if (
+                profs[i]
+                .find("div", {"class": "CardSchool__Department-sc-19lmz2k-0 haUIRO"})
+                .text
+                == "Computer Science"
+            ):
                 probablyTheRightProf = profs[i]
                 foundCSProf = True
                 break
+        # If none of the ooptions are in the CS department there is no profile
         if not foundCSProf:
             return None
     else:
+        # Only one prof means that ones probably the right one
         probablyTheRightProf = profs[0]
 
+    # Format and return the output
     scoreBox = probablyTheRightProf.div.div.div.find_all("div")[1:3]
-    data = scoreBox[0].text + " with " + scoreBox[1].text
-
-    return data
-
-'''print("Final")
-print(getRatingFromProf("a vardy"))'''
+    output = scoreBox[0].text + " with " + scoreBox[1].text
+    return output

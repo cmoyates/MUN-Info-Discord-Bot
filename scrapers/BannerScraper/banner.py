@@ -14,6 +14,7 @@ headers = {
     "Upgrade-Insecure-Requests": "1",
 }
 
+
 def actually_fetch_banner(year, term, level):
     data = {
         "p_term": f"{year}0{term}",
@@ -36,46 +37,74 @@ def actually_fetch_banner(year, term, level):
 
     return soup
 
-def getListingFromID(courseID):
+
+def getListingsFromID(courseID):
     output = []
-    campuses = []
+
+    # If it's before May in a given year, assume it's term 2 of the previous year
     currentDate = datetime.datetime.now()
     isTerm2 = currentDate.month < 5
-    year = (currentDate.year - 1) if (currentDate < datetime.datetime(currentDate.year, 4, 28)) else currentDate.year
+    year = (currentDate.year - 1) if isTerm2 else currentDate.year
     term = 2 if isTerm2 else 1
+
+    # Get the HTML
     searchHTML = actually_fetch_banner(year, term, 1)
+    # If there is no HTML, panic
     if not searchHTML:
         return "Something went wrong..."
+
+    # Split the HTML by campuses
     coursesByCampus = searchHTML.text.split("Campus: ")
+    # Get rid of the first part because it's nonsense
     coursesByCampus.pop(0)
+
+    # For each campus
     for i in range(len(coursesByCampus)):
+        # Split its contents into individual courses
         courses = coursesByCampus[i].split("\nCOMP")
-        campuses.append(courses.pop(0).split("\n", 1)[0].strip())
+        # Get the name of the campus
+        campusName = courses.pop(0).split("\n", 1)[0].strip()
+        # For each course, if it has the right ID
         for j in range(len(courses)):
             if courses[j][1:5] == courseID:
-                output.append([("COMP" + courses[j]).split("\n"), campuses[i]])
+                # Append it and its campus name to the output
+                output.append([("COMP" + courses[j]).split("\n"), campusName])
+
     return output
 
 
-def getProfAndCampusFromCourse(courseID):
-    output = getListingFromID(courseID)
-    results = {}
-    campuses = []
-    for i in range(len(output)):
-        campusName = output[i][1]
-        campuses.append(campusName)
-        results[campusName] = []
-        for j in range(len(output[i][0])):
-            if len(output[i][0][j]) == 0:
-                output[i][0] = output[i][0][0:j]
+def getProfsFromCourse(courseID):
+    profsByCampuses = {}
+
+    # Get the listing
+    listing = getListingsFromID(courseID)
+
+    # For each campus in the listing
+    for i in range(len(listing)):
+        # Add an empty list to the dict with the campus name as the key
+        campusName = listing[i][1]
+        profsByCampuses[campusName] = []
+
+        # For each line in the listing for the campus
+        for j in range(len(listing[i][0])):
+            # If the line is empty you're at the end
+            if len(listing[i][0][j]) == 0:
+                listing[i][0] = listing[i][0][0:j]
                 break
-            if output[i][0][j][38] != " ":
-                profName = output[i][0][j][148:].strip()
-                if len(profName) != 0:
+
+            # If the line has a "section number" in the space specified, look for a prof name
+            if listing[i][0][j][38] != " ":
+                # If the spot where the name should be is not empty
+                profName = listing[i][0][j][148:].strip()
+                if profName:
+                    # Check to see if it is a new prof campus combo
                     isNew = True
-                    for k in range(len(results[campusName])):
-                        if results[campusName][k] == profName:
+                    for k in range(len(profsByCampuses[campusName])):
+                        if profsByCampuses[campusName][k] == profName:
                             isNew = False
+
+                    # If it is, add it to the list in the dict for that particular campus
                     if isNew:
-                        results[campusName].append(profName)
-    return campuses, results
+                        profsByCampuses[campusName].append(profName)
+
+    return profsByCampuses

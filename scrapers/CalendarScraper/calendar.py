@@ -1,7 +1,7 @@
 from bs4 import BeautifulSoup
 from urllib.request import urlopen as uReq
 
-# The URL of MUNs listing of CS courses
+# The URL for MUNs listing of CS courses
 calendar_url = "https://www.mun.ca/regoff/calendar/sectionNo=SCI-1023"
 
 
