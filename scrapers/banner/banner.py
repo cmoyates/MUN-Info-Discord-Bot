@@ -5,7 +5,7 @@ import datetime
 
 # The stuff between these lines was taken from https://github.com/jackharrhy/muntrunk/blob/master/muntrunk/scrape.py
 # Full credit to Jack for this stuff
-#--------------------------------------------------------------------------------------------------
+# --------------------------------------------------------------------------------------------------
 headers = {
     "User-Agent": "github.com/cmoyates/MUN-Info-Discord-Bot",
     "Accept": "text/html",
@@ -39,7 +39,10 @@ def actually_fetch_banner(year, term, level):
         return None
 
     return soup
-#--------------------------------------------------------------------------------------------------
+
+
+# --------------------------------------------------------------------------------------------------
+
 
 def getListingsFromID(courseID):
     output = []

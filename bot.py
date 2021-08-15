@@ -28,7 +28,7 @@ async def getCourseDetails(ctx, *, courseID):
     if not courseName:
         await ctx.send("That course doesn't exist!")
         return
-    
+
     # Get the profs that are teaching the course this semester and the campuses where it's being taught
     instructorData = getProfsFromCourse(courseID)
     campuses = list(instructorData.keys())
@@ -40,7 +40,7 @@ async def getCourseDetails(ctx, *, courseID):
     embed = discord.Embed(
         title=("COMP " + courseID + ": " + courseName),
         description=courseInfo,
-        color=colors[courseYear-1]
+        color=colors[courseYear - 1],
     )
 
     # If nobody is teaching the course this semester tell the user
@@ -69,7 +69,9 @@ async def getCourseDetails(ctx, *, courseID):
             # If we couldn't get any info
             if not profInfo:
                 # Try to find an RMP profile using the dumb Banner name
-                rmpString, rmpName = getRatingFromProfName(instructorData[campuses[i]][j])
+                rmpString, rmpName = getRatingFromProfName(
+                    instructorData[campuses[i]][j]
+                )
                 # If there is an RMP profile
                 if rmpString:
                     profName = rmpName
@@ -92,9 +94,7 @@ async def getCourseDetails(ctx, *, courseID):
             profStrings.append(profString)
         # Add a field containing the campus name and all of the profStrings
         embed.add_field(
-            name="__"+campuses[i]+"__",
-            value="\n".join(profStrings),
-            inline=False
+            name="__" + campuses[i] + "__", value="\n".join(profStrings), inline=False
         )
 
     # Send the message

@@ -74,5 +74,7 @@ def getRatingFromProfName(profName):
     # Format and return the output
     scoreBox = probablyTheRightProf.div.div.div.find_all("div")[1:3]
     output = scoreBox[0].text + " with " + scoreBox[1].text
-    profRMPName = probablyTheRightProf.div.find("div", {"class": "TeacherCard__CardInfo-syjs0d-1 fkdYMc"}).div.text
+    profRMPName = probablyTheRightProf.div.find(
+        "div", {"class": "TeacherCard__CardInfo-syjs0d-1 fkdYMc"}
+    ).div.text
     return output, profRMPName
