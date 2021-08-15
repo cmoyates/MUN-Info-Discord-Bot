@@ -14,7 +14,6 @@ headers = {
     "Upgrade-Insecure-Requests": "1",
 }
 
-
 def actually_fetch_banner(year, term, level):
     data = {
         "p_term": f"{year}0{term}",
@@ -37,7 +36,7 @@ def actually_fetch_banner(year, term, level):
 
     return soup
 
-def getCourseFromID(courseID):
+def getListingFromID(courseID):
     output = []
     campuses = []
     currentDate = datetime.datetime.now()
@@ -58,8 +57,8 @@ def getCourseFromID(courseID):
     return output
 
 
-def theRestOfTheAlgorithm(courseID):
-    output = getCourseFromID(courseID)
+def getProfAndCampusFromCourse(courseID):
+    output = getListingFromID(courseID)
     results = {}
     campuses = []
     for i in range(len(output)):
@@ -80,6 +79,3 @@ def theRestOfTheAlgorithm(courseID):
                     if isNew:
                         results[campusName].append(profName)
     return campuses, results
-
-#one, two = theRestOfTheAlgorithm("1001")
-#print(one, two)
