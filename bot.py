@@ -1,10 +1,10 @@
 import discord
 import json
 from discord.ext import commands
-from scrapers.CalendarScraper.calendar import getNameAndInfoFromID
-from scrapers.BannerScraper.banner import getProfsFromCourse
-from scrapers.RMPScraper.rateMyProf import getRatingFromProfName
-from scrapers.PeopleScraper.people import getProfInfoFromName
+from scrapers.calendar.calendar import getNameAndInfoFromID
+from scrapers.banner.banner import getProfsFromCourse
+from scrapers.rmp.rateMyProf import getRatingFromProfName
+from scrapers.people.people import getProfInfoFromName
 
 bot = commands.Bot(command_prefix="!")
 
