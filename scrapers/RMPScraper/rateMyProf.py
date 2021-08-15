@@ -13,10 +13,7 @@ def getRMPURL(separatedProfName):
     finalUrl = urlParts[0]
 
     # Append every word from the name to the URL with "%20" in between them
-    for i in range(len(separatedProfName)):
-        finalUrl += separatedProfName[i]
-        if i != len(separatedProfName) - 1:
-            finalUrl += "%20"
+    finalUrl += "%20".join(separatedProfName)
 
     finalUrl += urlParts[1]
     return finalUrl
@@ -43,15 +40,15 @@ def getRatingFromProfName(profName):
     )
 
     # If there are no prof divs found we try again, but leave out the first name
-    if len(profs) == 0:
+    if not profs:
         finalUrl = getRMPURL(separatedName[1:])
         soup = getSoupFromURL(finalUrl)
         profs = soup.find_all(
             "a", {"class": "TeacherCard__StyledTeacherCard-syjs0d-0 dLJIlx"}
         )
         # Two fails means no profile
-        if len(profs) == 0:
-            return None
+        if not profs:
+            return None, None
 
     probablyTheRightProf = None
     # If more than one prof is found from the search find the first one in the CS department
@@ -69,7 +66,7 @@ def getRatingFromProfName(profName):
                 break
         # If none of the ooptions are in the CS department there is no profile
         if not foundCSProf:
-            return None
+            return None, None
     else:
         # Only one prof means that ones probably the right one
         probablyTheRightProf = profs[0]
@@ -77,4 +74,5 @@ def getRatingFromProfName(profName):
     # Format and return the output
     scoreBox = probablyTheRightProf.div.div.div.find_all("div")[1:3]
     output = scoreBox[0].text + " with " + scoreBox[1].text
-    return output
+    profRMPName = probablyTheRightProf.div.find("div", {"class": "TeacherCard__CardInfo-syjs0d-1 fkdYMc"}).div.text
+    return output, profRMPName

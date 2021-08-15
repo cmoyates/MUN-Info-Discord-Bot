@@ -47,19 +47,27 @@ async def getCourseDetails(ctx, *, courseID):
         msg += "__" + campuses[i] + "__\n"
         # For each prof
         for j in range(len(instructorData[campuses[i]])):
+            profName = ""
+            rmpString = ""
             # Get their info using the dumb Banner name
             profInfo = getProfInfoFromName(instructorData[campuses[i]][j])
-            profName = ""
-            # If no info can be found set their name to the dumb Banner name
-            if profInfo == None:
-                profName = instructorData[campuses[i]][j]
+            # If we couldn't get any info
+            if not profInfo:
+                # Try to find an RMP profile using the dumb Banner name
+                rmpString, rmpName = getRatingFromProfName(instructorData[campuses[i]][j])
+                # If there is an RMP profile
+                if rmpString:
+                    profName = rmpName
+                    # If there's no RMP profile either
+                else:
+                    profName = instructorData[campuses[i]][j]
                 msg += "**" + profName + "** (Not a listed MUN Prof) "
-            # Otherwise get their name from the info
+            # If we found the profs info in the first place
             else:
+                # Get the correct name and then get try to find the RMP profile using it
                 profName = profInfo["fname"] + " " + profInfo["lname"]
+                rmpString, rmpName = getRatingFromProfName(profName)
                 msg += profInfo["title"] + " **" + profName + "** "
-            # Try to get their "Rate My Prof" score
-            rmpString = getRatingFromProfName(profName)
             # Let the user know if a profile cannot be found, otherwise add the score to the message
             msg += (
                 "- No profile on Rate My Prof\n"
