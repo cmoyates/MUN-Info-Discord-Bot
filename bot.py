@@ -7,6 +7,7 @@ from scrapers.rmp.rateMyProf import getRatingFromProfName
 from scrapers.people.people import getProfInfoFromName
 
 bot = commands.Bot(command_prefix="!")
+colors = [discord.Color.blue(), discord.Color.red(), discord.Color.green(), 0]
 
 
 @bot.event
@@ -21,32 +22,46 @@ async def ping(ctx):
 
 @bot.command(aliases=["course", "courses"])
 async def getCourseDetails(ctx, *, courseID):
-    # Get the name and description for the course
+    # Get the course name and info from the calendar
     courseName, courseInfo = getNameAndInfoFromID(courseID)
     # If there is no name, tell the user that the course doesn't exist
-    if courseName == None:
+    if not courseName:
         await ctx.send("That course doesn't exist!")
         return
-
-    # Initialize the message with the info we have so far
-    msg = "**COMP " + courseID + ": " + courseName + "**\n" + courseInfo + "\n"
-
+    
     # Get the profs that are teaching the course this semester and the campuses where it's being taught
     instructorData = getProfsFromCourse(courseID)
     campuses = list(instructorData.keys())
 
-    # If it's not being taught anywhere let the user know
+    # Get the year/level of the course
+    courseYear = int(courseID[0])
+
+    # Set up the initial embed for the message
+    embed = discord.Embed(
+        title=("COMP " + courseID + ": " + courseName),
+        description=courseInfo,
+        color=colors[courseYear-1]
+    )
+
+    # If nobody is teaching the course this semester tell the user
     if not campuses:
-        await ctx.send(msg + "\n**Nobody** is teaching this course this semester")
+        embed.description += "\n\n**Nobody** is teaching this course this semester"
+        await ctx.send(embed=embed)
         return
 
-    msg += "\nProfessor(s) teaching this course this semester:\n"
+    # If this is a course without an insturctor, send the embed as is
+    if not instructorData[campuses[0]]:
+        await ctx.send(embed=embed)
+        return
+
+    embed.description += "\n\nProfessor(s) teaching this course this semester:\n"
+
     # For each campus
     for i in range(len(campuses)):
-        # Add the name of the campus to the message
-        msg += "__" + campuses[i] + "__\n"
+        profStrings = []
         # For each prof
         for j in range(len(instructorData[campuses[i]])):
+            profString = ""
             profName = ""
             rmpString = ""
             # Get their info using the dumb Banner name
@@ -61,21 +76,29 @@ async def getCourseDetails(ctx, *, courseID):
                     # If there's no RMP profile either
                 else:
                     profName = instructorData[campuses[i]][j]
-                msg += "**" + profName + "** (Not a listed MUN Prof) "
+                profString += "**" + profName + "** (Not a listed MUN Prof) "
             # If we found the profs info in the first place
             else:
                 # Get the correct name and then get try to find the RMP profile using it
                 profName = profInfo["fname"] + " " + profInfo["lname"]
                 rmpString, rmpName = getRatingFromProfName(profName)
-                msg += profInfo["title"] + " **" + profName + "** "
-            # Let the user know if a profile cannot be found, otherwise add the score to the message
-            msg += (
-                "- No profile on Rate My Prof\n"
+                profString = profInfo["title"] + " **" + profName + "** "
+            # Let the user know if a profile cannot be found, otherwise add the score to the profString
+            profString += (
+                " - No profile on Rate My Prof\n"
                 if rmpString == None
-                else "- Rate My Prof Score: " + rmpString + "\n"
+                else " - Rate My Prof Score: " + rmpString + "\n"
             )
+            profStrings.append(profString)
+        # Add a field containing the campus name and all of the profStrings
+        embed.add_field(
+            name="__"+campuses[i]+"__",
+            value="\n".join(profStrings),
+            inline=False
+        )
+
     # Send the message
-    await ctx.send(msg)
+    await ctx.send(embed=embed)
 
 
 f = open("config.json")
