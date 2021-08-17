@@ -5,6 +5,10 @@ from calendarScraper import CalendarScraper
 from bannerScraper import BannerScraper
 from rmpScraper import RMPScraper
 from peopleScraper import PeopleScraper
+import os
+
+from dotenv import load_dotenv
+load_dotenv()
 
 bot = commands.Bot(command_prefix="!")
 colors = [discord.Color.blue(), discord.Color.red(), discord.Color.green(), 0]
@@ -123,8 +127,8 @@ async def getCourseDetails(ctx, *, course_ID):
     await ctx.send(embed=embed)
 
 
-f = open("config.json")
+'''f = open("config.json")
 data = json.load(f)
-f.close()
+f.close()'''
 
-bot.run(data["token"])
+bot.run(os.getenv("TOKEN", None))

@@ -82,7 +82,7 @@ class BannerScraper:
             print("Got the banner HTML by scraping")
             # Otherwise get them through webscraping and add them to the cache
             search_HTML = self.actually_fetch_banner(year, term, 1).text
-            await self.banner_cache.insert_one(
+            self.banner_cache.insert_one(
                 {
                     "datetime": datetime.utcnow(),
                     "year": year,
