@@ -8,14 +8,15 @@ from peopleScraper import PeopleScraper
 import os
 
 from dotenv import load_dotenv
+
 load_dotenv()
 
 bot = commands.Bot(command_prefix="!")
 colors = [discord.Color.blue(), discord.Color.red(), discord.Color.green(), 0]
-calendar_scraper = CalendarScraper(604800) # 1 week cache lifetime
-banner_scraper = BannerScraper(604800) # 1 week cache lifetime
-rmp_scraper = RMPScraper(604800) # 1 week cache lifetime
-people_scraper = PeopleScraper(604800) # 1 week cache lifetime
+calendar_scraper = CalendarScraper(604800)  # 1 week cache lifetime
+banner_scraper = BannerScraper(604800)  # 1 week cache lifetime
+rmp_scraper = RMPScraper(604800)  # 1 week cache lifetime
+people_scraper = PeopleScraper(604800)  # 1 week cache lifetime
 
 
 @bot.event
@@ -87,10 +88,7 @@ async def getCourseDetails(ctx, *, course_ID):
             # If we couldn't get any info
             if not prof_info:
                 # Try to find an RMP profile using the dumb Banner name
-                (
-                    rmp_string,
-                    rmp_name,
-                ) = await rmp_scraper.get_rating_from_prof_name(
+                (rmp_string, rmp_name,) = await rmp_scraper.get_rating_from_prof_name(
                     instructor_data[campuses[i]][j]
                 )
                 # If there is an RMP profile
@@ -127,8 +125,8 @@ async def getCourseDetails(ctx, *, course_ID):
     await ctx.send(embed=embed)
 
 
-'''f = open("config.json")
+"""f = open("config.json")
 data = json.load(f)
-f.close()'''
+f.close()"""
 
 bot.run(os.getenv("TOKEN", None))
