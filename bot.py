@@ -1,13 +1,17 @@
 import discord
 import json
 from discord.ext import commands
-from scrapers.calendar.calendar import getNameAndInfoFromID
-from scrapers.banner.banner import getProfsFromCourse
-from scrapers.rmp.rateMyProf import getRatingFromProfName
-from scrapers.people.people import getProfInfoFromName
+from calendarScraper import CalendarScraper
+from bannerScraper import BannerScraper
+from rmpScraper import RMPScraper
+from peopleScraper import PeopleScraper
 
 bot = commands.Bot(command_prefix="!")
 colors = [discord.Color.blue(), discord.Color.red(), discord.Color.green(), 0]
+calendar_scraper = CalendarScraper(604800) # 1 week cache lifetime
+banner_scraper = BannerScraper(604800) # 1 week cache lifetime
+rmp_scraper = RMPScraper(604800) # 1 week cache lifetime
+people_scraper = PeopleScraper(604800) # 1 week cache lifetime
 
 
 @bot.event
@@ -21,80 +25,98 @@ async def ping(ctx):
 
 
 @bot.command(aliases=["course", "courses"])
-async def getCourseDetails(ctx, *, courseID):
+async def getCourseDetails(ctx, *, course_ID):
+    """Replies with info on a CS course when given the courses number/ID"""
     # Get the course name and info from the calendar
-    courseName, courseInfo = getNameAndInfoFromID(courseID)
+    (
+        course_name,
+        course_info,
+    ) = await calendar_scraper.get_name_and_info_from_ID(course_ID)
     # If there is no name, tell the user that the course doesn't exist
-    if not courseName:
+    if not course_name:
         await ctx.send("That course doesn't exist!")
         return
 
     # Get the profs that are teaching the course this semester and the campuses where it's being taught
-    instructorData = getProfsFromCourse(courseID)
-    campuses = list(instructorData.keys())
+    instructor_data = await banner_scraper.get_profs_from_course(course_ID)
+    campuses = list(instructor_data.keys())
 
     # Get the year/level of the course
-    courseYear = int(courseID[0])
+    course_year = int(course_ID[0])
 
     # Set up the initial embed for the message
     embed = discord.Embed(
-        title=("COMP " + courseID + ": " + courseName),
-        description=courseInfo,
-        color=colors[courseYear - 1],
+        title=(f"COMP {course_ID}: {course_name}"),
+        color=colors[course_year - 1],
     )
 
     # If nobody is teaching the course this semester tell the user
     if not campuses:
-        embed.description += "\n\n**Nobody** is teaching this course this semester"
+        embed.description = (
+            f"{course_info}\n\n**Nobody** is teaching this course this semester"
+        )
         await ctx.send(embed=embed)
         return
 
-    # If this is a course without an insturctor, send the embed as is
-    if not instructorData[campuses[0]]:
+    # If this is a course without an insturctor, send the embed with just the course description
+    if not instructor_data[campuses[0]]:
+        embed.description = course_info
         await ctx.send(embed=embed)
         return
 
-    embed.description += "\n\nProfessor(s) teaching this course this semester:\n"
+    embed.description = (
+        f"{course_info}\n\nProfessor(s) teaching this course this semester:\n"
+    )
 
     # For each campus
     for i in range(len(campuses)):
-        profStrings = []
+        prof_strings = []
         # For each prof
-        for j in range(len(instructorData[campuses[i]])):
-            profString = ""
-            profName = ""
-            rmpString = ""
+        for j in range(len(instructor_data[campuses[i]])):
+            prof_string = ""
+            prof_name = ""
+            rmp_string = ""
             # Get their info using the dumb Banner name
-            profInfo = getProfInfoFromName(instructorData[campuses[i]][j])
+            prof_info = await people_scraper.get_prof_info_from_name(
+                instructor_data[campuses[i]][j]
+            )
             # If we couldn't get any info
-            if not profInfo:
+            if not prof_info:
                 # Try to find an RMP profile using the dumb Banner name
-                rmpString, rmpName = getRatingFromProfName(
-                    instructorData[campuses[i]][j]
+                (
+                    rmp_string,
+                    rmp_name,
+                ) = await rmp_scraper.get_rating_from_prof_name(
+                    instructor_data[campuses[i]][j]
                 )
                 # If there is an RMP profile
-                if rmpString:
-                    profName = rmpName
+                if rmp_string:
+                    prof_name = rmp_name
                     # If there's no RMP profile either
                 else:
-                    profName = instructorData[campuses[i]][j]
-                profString += "**" + profName + "** (Not a listed MUN Prof) "
+                    prof_name = instructor_data[campuses[i]][j]
+                prof_string = f"**{prof_name}** (Not a listed MUN Prof) "
             # If we found the profs info in the first place
             else:
                 # Get the correct name and then get try to find the RMP profile using it
-                profName = profInfo["fname"] + " " + profInfo["lname"]
-                rmpString, rmpName = getRatingFromProfName(profName)
-                profString = profInfo["title"] + " **" + profName + "** "
-            # Let the user know if a profile cannot be found, otherwise add the score to the profString
-            profString += (
+                prof_name = f"{prof_info['fname']} {prof_info['lname']}"
+                (
+                    rmp_string,
+                    rmp_name,
+                ) = await rmp_scraper.get_rating_from_prof_name(prof_name)
+                prof_string = f"{prof_info['title']} **{prof_name}** "
+            # Let the user know if a profile cannot be found, otherwise add the score to the prof string
+            prof_string += (
                 " - No profile on Rate My Prof\n"
-                if rmpString == None
-                else " - Rate My Prof Score: " + rmpString + "\n"
+                if rmp_string == None
+                else " - Rate My Prof Score: " + rmp_string + "\n"
             )
-            profStrings.append(profString)
-        # Add a field containing the campus name and all of the profStrings
+            prof_strings.append(prof_string)
+        # Add a field containing the campus name and all of the prof strings
         embed.add_field(
-            name="__" + campuses[i] + "__", value="\n".join(profStrings), inline=False
+            name="__" + campuses[i] + "__",
+            value="\n".join(prof_strings),
+            inline=False,
         )
 
     # Send the message
